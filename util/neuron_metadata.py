@@ -22,9 +22,15 @@ class NeuronMetadataCollection:
       dictionary from id (int) to NeuronMetadata. E.g. 0 -> <"PLML", NeuronType.SENSORY>
     """
     self.id_to_metadata = id_to_metadata
+    self.name_to_id = {}
+    for (id, metadata) in id_to_metadata.items():
+      self.name_to_id[metadata.name] = id
 
   def get_metadata(self, id):
     return self.id_to_metadata[id]
+
+  def get_id_from_name(self, name):
+    return self.name_to_id[name]
 
   @staticmethod
   def json_group_to_neuron_type(group):
