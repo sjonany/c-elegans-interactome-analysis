@@ -32,6 +32,9 @@ class NeuronMetadataCollection:
   def get_id_from_name(self, name):
     return self.name_to_id[name]
 
+  def get_size(self):
+    return len(self.id_to_metadata)
+
   @staticmethod
   def json_group_to_neuron_type(group):
     if group == 1:
@@ -42,6 +45,18 @@ class NeuronMetadataCollection:
         return NeuronType.INTERNEURON
     else:
         raise Exception('Invalid neuron group {}'.format(group))
+
+  @staticmethod
+  def neuron_type_to_str(neuron_type):
+    if neuron_type == NeuronType.SENSORY:
+      return "SENSORY"
+    elif neuron_type == NeuronType.MOTOR:
+      return "MOTOR"
+    elif neuron_type == NeuronType.INTERNEURON:
+      return "INTERNEURON"
+    else:
+        raise Exception('Invalid neuron type {}'.format(neuron_type))
+
 
   @staticmethod
   def load_from_chem_json(path_to_chem_json):
