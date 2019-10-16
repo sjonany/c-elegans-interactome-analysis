@@ -94,7 +94,7 @@ class NeuralModel:
 
     A = m1 + m2 + m3 + m4
     b = b1 + b3 - self.I_ext
-    self.V_th = linalg.solve(A, b)
+    self.Vth = linalg.solve(A, b)
     # TODO: Reread code, then verify value against interactome w/ 0 injection.
 
 # TODO: Implement run()
@@ -102,4 +102,9 @@ class NeuralModel:
 # TODO: Delete the testing code below
 model = NeuralModel()
 model.init()
-print(model.V_th)
+print("Vth 1 30 100, sum =  {} {} {} {}".format(model.Vth[1], model.Vth[30], model.Vth[100], sum(model.Vth)))
+
+# Interactome's output:
+# Vth 1 30 100, sum =  -18.3342063908 -6.2498993778 -3.61729185518 -1194.25458719
+# Out output:
+# Vth 1 30 100, sum =  [-18.33333333] [-2.75030651] [-3.57268053] [-1114.86322726]
