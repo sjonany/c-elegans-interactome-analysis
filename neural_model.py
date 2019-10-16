@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import linalg
 
 class NeuralModel:
   """ The C elegans model as described in the paper: "Neural Interactome: Interactive Simulation of a Neuronal System"
@@ -27,7 +28,7 @@ class NeuralModel:
     self.seed = None
 
     # TODO: Set params = I_ext, an array of constants. Most are zeroes.
-    self.I_ext = np.zeros(self.N)
+    self.I_ext = np.reshape(np.zeros(self.N), (self.N,1))
 
     # Cell membrane capacitance. 1.5 pF / 100 = 0.015 arb (arbitrary unit)
     self.C = 0.015
@@ -70,14 +71,35 @@ class NeuralModel:
     self.E = np.reshape(E, (self.N, 1))
 
     if self.seed is not None:
-      np.random.seed(self.seed)  
+      np.random.seed(self.seed)
 
-# TODO: Calculate Vth
+    self.compute_Vth()
+
+  def compute_Vth(self):
+    b1 = -np.tile(self.Gc * self.Ec, (self.N, 1))
+    s_eq = self.ar / (self.ar + 2 * self.ad)
+    b3 = -s_eq * (self.Gg @ self.E)
+
+    m1 = -self.Gc * np.identity(self.N)
+    # N x 1, where each item is a row sum
+    Gg_row_sums =  self.Gg.sum(axis = 1)
+    # m2 is a diagonal matrix with the negative row sums as the values
+    m2 = - np.diag(Gg_row_sums)
+    Gs_row_sums =  self.Gs.sum(axis = 1)
+    m3 = - s_eq * np.diag(Gs_row_sums)
+    # I think paper is missing m4. It shouldn't be the case that A is a completely diagonal matrix.
+    # However, interactome github code seems to have done this correctly.
+    # Our implementation is mathematically equivalent to the github code.
+    m4 = self.Gg
+
+    A = m1 + m2 + m3 + m4
+    b = b1 + b3 - self.I_ext
+    self.V_th = linalg.solve(A, b)
+    # TODO: Reread code, then verify value against interactome w/ 0 injection.
+
 # TODO: Implement run()
 
 # TODO: Delete the testing code below
 model = NeuralModel()
 model.init()
-print(model.E)
-print(model.Gg)
-print(model.Gs)
+print(model.V_th)
