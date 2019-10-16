@@ -69,6 +69,9 @@ class NeuralModel:
     # N x 1 matrix.
     self.E = np.reshape(E, (self.N, 1))
 
+    if self.seed is not None:
+      np.random.seed(self.seed)  
+
 # TODO: Calculate Vth
 # TODO: Implement run()
 
