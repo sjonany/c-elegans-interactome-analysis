@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import linalg, sparse
+from scipy import integrate, linalg, sparse
 import pdb
 
 class NeuralModel:
@@ -67,9 +67,7 @@ class NeuralModel:
     # 0 mV for synapses going from an excitatory neuron, -48 mV for inhibitory.
     # N-element array that is 1.0 if inhibitory.
     is_inhibitory = np.load('data/emask.npy')
-    E = -48.0 * is_inhibitory
-    # N x 1 matrix.
-    self.E = np.reshape(E, (self.N, 1))
+    self.E = np.reshape(-48.0 * is_inhibitory, self.N)
 
     if self.seed is not None:
       np.random.seed(self.seed)
@@ -89,7 +87,7 @@ class NeuralModel:
     - L2 norm of compute_Vth() and compute_Vth_interactome():  3.907985046680551e-14
     """
 
-    b1 = -np.tile(self.Gc * self.Ec, (self.N, 1))
+    b1 = -np.tile(self.Gc * self.Ec, self.N)
     # Interactome rounded to 4, so we followed suit.
     s_eq = round(self.ar / (self.ar + 2 * self.ad), 4)
     b3 = -s_eq * (self.Gs @ self.E)
@@ -107,9 +105,8 @@ class NeuralModel:
     m4 = self.Gg
 
     A = m1 + m2 + m3 + m4
-    # If you don't reshape I_ext to be an Nx1 vector, you will get buggy results.
-    b = b1 + b3 - np.reshape(self.I_ext, (self.N,1))
-    self.Vth = linalg.solve(A, b)
+    b = b1 + b3 - self.I_ext
+    self.Vth = np.reshape(linalg.solve(A, b), self.N)
 
   def compute_Vth_interactome(self):
     """
@@ -122,7 +119,7 @@ class NeuralModel:
     M1 = -self.Gc * np.identity(N)
     # Modified from
     # b1 = np.multiply(Gc, EcVec)
-    b1 = np.tile(self.Gc * self.Ec, (N, 1))
+    b1 = np.tile(self.Gc * self.Ec, N)
 
     # Modified from
     # Ggap = np.multiply(ggap, Gg)
@@ -159,9 +156,77 @@ class NeuralModel:
     # InputMask = np.multiply(Iext, InMask)
     InputMask = self.I_ext
     b = np.subtract(bb, InputMask)
-    self.Vth = linalg.solve(M, b)
+    self.Vth = np.reshape(linalg.solve(M, b), self.N)
+  
+  def dynamic(self, t, state_vars):
+    """Dictates the dynamics of the system.
+    """
+    v_arr, s_arr = np.split(state_vars, 2)
 
-# TODO: Implement run()
+    # I_leak
+    I_leak = self.Gc * (v_arr - self.Ec)
+
+    # I_gap = sum_j G_ij (V_i - V_j) = V_i sum_j G_ij - sum_j G_ij V_j
+    # The first term is a point-wise multiplication of V and G's squashed column.
+    # The second term is matrix multiplication of G and V
+    I_gap = self.Gg.sum(axis = 1) * v_arr - self.Gg @ v_arr
+    
+    # I_syn = sum_j G_ij s_j (V_i - E_j) = V_i sum_j G_ij s_j - sum_j G_j s_j E_j
+    # First term is a point-wise multiplication of V and (Matrix mult of G and s)
+    # Second term is matrix mult of G and (point mult of s_j and E_j)
+    I_syn = v_arr * (self.Gs @ s_arr) - self.Gs @ (s_arr * self.E)
+
+    dV = (-I_leak - I_gap - I_syn + self.I_ext) / self.C
+    phi = np.reciprocal(1.0 + np.exp(-self.B*(v_arr - self.Vth)))
+    syn_rise = self.ar * phi * (1 - s_arr)
+                          
+    syn_drop = self.ad * s_arr
+    dS = syn_rise - syn_drop
+    return np.concatenate((dV, dS))
+
+  def run(self, num_timesteps):
+    """Create initial conditions, then simulate dynamics num_timesteps times.
+    Args:
+      num_timesteps (int): The number of simulation timesteps to run for. Each timestep is dt second long.
+    Returns:
+      v_mat (N x num_timesteps): Each row is a voltage timeseries of a neuron. 
+      s_mat (N x num_timesteps): Each row is an activation timeseries of a neuron's synaptic current.
+      v_scaled_mat (N x num_timesteps): vs, but scaled just like the exported dynamics file from Interactome.
+    """
+
+    N = self.N
+    # Each timestep is 0.01s long.
+    dt = 0.01
+    # Note that seed is set in init()
+    init_vals = 10**(-4)*np.random.normal(0, 0.94, 2*N)
+
+    # The variables to store our complete timeseries data.
+    v_mat = []
+    s_mat = []
+    v_scaled_mat = []
+
+    # TODO: with_jacobian is not needed, remove this.
+    dyn = integrate.ode(self.dynamic).set_integrator('vode', atol = 1e-3, min_step = dt*1e-6, method = 'bdf', with_jacobian = True)
+    dyn.set_initial_value(init_vals, 0)
+
+    for t in range(num_timesteps):
+      dyn.integrate(dyn.t + dt)
+      v_arr = dyn.y[:N]
+      s_arr = dyn.y[N:]
+      v_mat.append(v_arr)
+      s_mat.append(s_arr)
+
+      # TODO: Implement scaling
+      """
+      data = np.subtract(v_arr, self.Vth)
+      init_data_Mat[k, :] = voltage_filter(data, 500, 1)
+      """
+      v_scaled_arr = s_arr
+      v_scaled_mat.append(v_scaled_arr)
+
+    # TODO: Rotate v_mat, s_mat, v_scaled_mat to be 1 row = 1 neuron.
+    return v_mat, s_mat, v_scaled_mat
+
 model = NeuralModel()
 model.init()
-print(model.Vth.sum())
+(v_mat, s_mat, v_scaled_mat) = model.run(10)
