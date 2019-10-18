@@ -229,6 +229,7 @@ class NeuralModel:
       v_mat.append(v_arr)
       s_mat.append(s_arr)
       v_normalized_mat.append(v_normalized_arr)
+      pdb.set_trace()
       # TODO: Compare the normalization result against interactome.
 
     # TODO: Rotate so each entry's row = 1 neuron.
