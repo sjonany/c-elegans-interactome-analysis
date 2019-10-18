@@ -215,7 +215,6 @@ class NeuralModel:
       s_arr = dyn.y[N:]
       v_mat.append(v_arr)
       s_mat.append(s_arr)
-
       # TODO: Implement scaling
       """
       data = np.subtract(v_arr, self.Vth)
@@ -228,5 +227,6 @@ class NeuralModel:
     return v_mat, s_mat, v_scaled_mat
 
 model = NeuralModel()
+model.seed = 0
 model.init()
 (v_mat, s_mat, v_scaled_mat) = model.run(10)
