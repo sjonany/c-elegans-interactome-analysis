@@ -184,6 +184,18 @@ class NeuralModel:
     dS = syn_rise - syn_drop
     return np.concatenate((dV, dS))
 
+  def get_normalized_v_arr(self, v_arr):
+    """The paper performs analysis on this normalized v_arr.
+    """
+    vth_adjusted = v_arr - self.Vth
+    vmax = 500
+
+    # tanh: Similar to sigmoid, but squashes to between -1 and 1.
+    # So, below readjusts value to range from -500 to 500.
+    if max(vth_adjusted) > vmax:
+      raise Exception("Our vmax of {} is not big enough. Current vth_adjust max = {}.".format(vmax, max(vth_adjusted)))
+    return vmax * np.tanh(np.divide(vth_adjusted, vmax)) 
+
   def run(self, num_timesteps):
     """Create initial conditions, then simulate dynamics num_timesteps times.
     Args:
@@ -191,7 +203,7 @@ class NeuralModel:
     Returns:
       v_mat (N x num_timesteps): Each row is a voltage timeseries of a neuron. 
       s_mat (N x num_timesteps): Each row is an activation timeseries of a neuron's synaptic current.
-      v_scaled_mat (N x num_timesteps): vs, but scaled just like the exported dynamics file from Interactome.
+      v_normalized_mat (N x num_timesteps): vs, but normalized just like the exported dynamics file from Interactome.
     """
 
     N = self.N
@@ -203,7 +215,7 @@ class NeuralModel:
     # The variables to store our complete timeseries data.
     v_mat = []
     s_mat = []
-    v_scaled_mat = []
+    v_normalized_mat = []
 
     # TODO: with_jacobian is not needed, remove this.
     dyn = integrate.ode(self.dynamic).set_integrator('vode', atol = 1e-3, min_step = dt*1e-6, method = 'bdf', with_jacobian = True)
@@ -213,20 +225,16 @@ class NeuralModel:
       dyn.integrate(dyn.t + dt)
       v_arr = dyn.y[:N]
       s_arr = dyn.y[N:]
+      v_normalized_arr = self.get_normalized_v_arr(v_arr)
       v_mat.append(v_arr)
       s_mat.append(s_arr)
-      # TODO: Implement scaling
-      """
-      data = np.subtract(v_arr, self.Vth)
-      init_data_Mat[k, :] = voltage_filter(data, 500, 1)
-      """
-      v_scaled_arr = s_arr
-      v_scaled_mat.append(v_scaled_arr)
+      v_normalized_mat.append(v_normalized_arr)
+      # TODO: Compare the normalization result against interactome.
 
-    # TODO: Rotate v_mat, s_mat, v_scaled_mat to be 1 row = 1 neuron.
-    return v_mat, s_mat, v_scaled_mat
+    # TODO: Rotate so each entry's row = 1 neuron.
+    return v_mat, s_mat, v_normalized_mat
 
 model = NeuralModel()
 model.seed = 0
 model.init()
-(v_mat, s_mat, v_scaled_mat) = model.run(10)
+(v_mat, s_mat, v_normalized_mat) = model.run(10)
