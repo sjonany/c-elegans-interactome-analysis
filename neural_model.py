@@ -9,18 +9,22 @@ class NeuralModel:
   Usage:
     neuron_metadata_collection = NeuronMetadataCollection.load_from_chem_json('data/chem.json')
     model = NeuralModel(neuron_metadata_collection)
+
     # You can tweak parameters before running
-    model.G_c = 0.2
+
     # If you want a fixed-seed run.
     # If not specified, will not set seed, and use default python randomizer
     model.seed = 0
+    model.set_current_injection("AVBL", 2.3)
+    model.set_current_injection("AVBR", 2.3)
+    model.set_current_injection("PLML", 1.4)
+    model.set_current_injection("PLMR", 1.4)
 
     # This will use your tweaked parameters to read files and precompute some values.
     model.init()
+    (v_mat, s_mat, v_normalized_mat) = model.run(100)
 
-    (vs, ss, normalized_vs) = model.run()
-    # vs and ss are timeseries for the voltage and synaptic gating state variables
-    # normalized_vs are the scaled V dynamics that interactome exports as npy files.
+    For an end-to-end example, please see milestone_responsive.ipynb
   """
 
   def __init__(self, neuron_metadata_collection):
@@ -206,9 +210,11 @@ class NeuralModel:
     Args:
       num_timesteps (int): The number of simulation timesteps to run for. Each timestep is dt = 0.01 second long.
     Returns:
-      v_mat (N x num_timesteps): Each row is a voltage timeseries of a neuron. 
-      s_mat (N x num_timesteps): Each row is an activation timeseries of a neuron's synaptic current.
-      v_normalized_mat (N x num_timesteps): vs, but normalized just like the exported dynamics file from Interactome.
+      v_mat (num_timesteps x N): Each column is a voltage timeseries of a neuron. 
+      s_mat (num_timesteps x N): Each column is an activation timeseries of a neuron's synaptic current.
+      v_normalized_mat (num_timesteps x N): v_mat, but normalized just like the exported dynamics file from Interactome.
+        Note that interactome's exported data starts from timestep 50 onwards, so make sure to truncate first 50 if you
+        want to compare. See milestone_responsive.ipynb for how to do this.
     """
 
     N = self.N
@@ -222,7 +228,6 @@ class NeuralModel:
     s_mat = []
     v_normalized_mat = []
 
-    # TODO: with_jacobian is not needed, remove this.
     dyn = integrate.ode(self.dynamic).set_integrator('vode', atol = 1e-3, min_step = dt*1e-6, method = 'bdf', with_jacobian = True)
     dyn.set_initial_value(init_vals, 0)
 
@@ -236,13 +241,3 @@ class NeuralModel:
       v_normalized_mat.append(v_normalized_arr)
 
     return np.array(v_mat), np.array(s_mat), np.array(v_normalized_mat)
-
-neuron_metadata_collection = NeuronMetadataCollection.load_from_chem_json('data/chem.json')
-model = NeuralModel(neuron_metadata_collection)
-model.seed = 0
-model.set_current_injection("AVBL", 2.3)
-model.set_current_injection("AVBR", 2.3)
-model.set_current_injection("PLML", 1.4)
-model.set_current_injection("PLMR", 1.4)
-model.init()
-(v_mat, s_mat, v_normalized_mat) = model.run(10)
