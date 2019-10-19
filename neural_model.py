@@ -1,12 +1,14 @@
 import numpy as np
 from scipy import integrate, linalg, sparse
 import pdb
+from util.neuron_metadata import *
 
 class NeuralModel:
   """ The C elegans model as described in the paper: "Neural Interactome: Interactive Simulation of a Neuronal System"
   Main reference: https://github.com/shlizee/C-elegans-Neural-Interactome/blob/master/initialize.py
   Usage:
-    model = NeuralModel.create_model('data/chem.json', 'data/gap.json')
+    neuron_metadata_collection = NeuronMetadataCollection.load_from_chem_json('data/chem.json')
+    model = NeuralModel(neuron_metadata_collection)
     # You can tweak parameters before running
     model.G_c = 0.2
     # If you want a fixed-seed run.
@@ -16,12 +18,13 @@ class NeuralModel:
     # This will use your tweaked parameters to read files and precompute some values.
     model.init()
 
-    (vs, ss, scaled_vs) = model.run()
+    (vs, ss, normalized_vs) = model.run()
     # vs and ss are timeseries for the voltage and synaptic gating state variables
-    # scaled_vs are the scaled V dynamics that interactome exports as npy files.
+    # normalized_vs are the scaled V dynamics that interactome exports as npy files.
   """
 
-  def __init__(self):
+  def __init__(self, neuron_metadata_collection):
+    self.neuron_metadata_collection = neuron_metadata_collection
     # Number of neurons
     self.N = 279
 
@@ -53,6 +56,11 @@ class NeuralModel:
     self.ad = 5.0/1.5
     # Width of the sigmoid (mv^-1)
     self.B = 0.125
+
+  def set_current_injection(self, neuron_name, current_nA):
+    neuron_id = self.neuron_metadata_collection.get_id_from_name(neuron_name)
+    # For reference, 2.3nA results in 23,000 current in interactome's code
+    self.I_ext[neuron_id] = current_nA * 10000
   
   def init(self):
     # Gap junctions. Total conductivity of gap junctions, where total conductivity = #junctions * ggap.
@@ -192,8 +200,6 @@ class NeuralModel:
 
     # tanh: Similar to sigmoid, but squashes to between -1 and 1.
     # So, below readjusts value to range from -500 to 500.
-    if max(vth_adjusted) > vmax:
-      raise Exception("Our vmax of {} is not big enough. Current vth_adjust max = {}.".format(vmax, max(vth_adjusted)))
     return vmax * np.tanh(np.divide(vth_adjusted, vmax)) 
 
   def run(self, num_timesteps):
@@ -229,13 +235,16 @@ class NeuralModel:
       v_mat.append(v_arr)
       s_mat.append(s_arr)
       v_normalized_mat.append(v_normalized_arr)
-      pdb.set_trace()
-      # TODO: Compare the normalization result against interactome.
 
     # TODO: Rotate so each entry's row = 1 neuron.
     return v_mat, s_mat, v_normalized_mat
 
-model = NeuralModel()
+neuron_metadata_collection = NeuronMetadataCollection.load_from_chem_json('data/chem.json')
+model = NeuralModel(neuron_metadata_collection)
 model.seed = 0
+model.set_current_injection("AVBL", 2.3)
+model.set_current_injection("AVBR", 2.3)
+model.set_current_injection("PLML", 1.4)
+model.set_current_injection("PLMR", 1.4)
 model.init()
 (v_mat, s_mat, v_normalized_mat) = model.run(10)
