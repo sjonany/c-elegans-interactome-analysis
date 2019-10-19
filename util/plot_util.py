@@ -23,6 +23,9 @@ def plot_saved_dynamics(neuron_names_to_show, dynamics, neuron_metadata_collecti
     # The neuron ids are already 0-indexed, and is a direct index to dynamics column.
     dynamic = dynamics[:, id]
     
-    ax = axes[i]
+    if num_neurons_to_show == 1:
+      ax = axes
+    else:
+      ax = axes[i]
     ax.plot(times, dynamic)
     ax.set_title(name)
