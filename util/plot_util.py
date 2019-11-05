@@ -29,3 +29,20 @@ def plot_saved_dynamics(neuron_names_to_show, dynamics, neuron_metadata_collecti
       ax = axes[i]
     ax.plot(times, dynamic)
     ax.set_title(name)
+
+def plot_saved_dynamics_by_id(neuron_ids, dynamics):
+  dynamics_snapshot_count = dynamics.shape[0]
+  num_neurons_to_show = len(neuron_ids)
+  fig, axes = plt.subplots(nrows=num_neurons_to_show, ncols=1,
+      figsize=(10, 3 * num_neurons_to_show))
+  times = np.arange(0, dynamics_snapshot_count * 0.01 , 0.01)
+  for i in range(num_neurons_to_show):
+    id = neuron_ids[i]
+    dynamic = dynamics[:, id]
+    
+    if num_neurons_to_show == 1:
+      ax = axes
+    else:
+      ax = axes[i]
+    ax.plot(times, dynamic)
+    ax.set_title("Neuron " + str(id))
