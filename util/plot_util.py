@@ -3,6 +3,7 @@ Plotting utilities.
 """
 import pylab as plt
 import numpy as np
+from scipy.fftpack import fft
 
 def plot_saved_dynamics(neuron_names_to_show, dynamics, neuron_metadata_collection):
   """ Plot timeseries charts for the selected neuron names using data from 'dynamics'
@@ -29,3 +30,29 @@ def plot_saved_dynamics(neuron_names_to_show, dynamics, neuron_metadata_collecti
       ax = axes[i]
     ax.plot(times, dynamic)
     ax.set_title(name)
+
+def plot_principal_component_fft(n_components, projected, t):
+  """ Plots FFT for a projected time series of principal components
+  Args:
+    n_components (int): number of components to include in the plot
+    projected (M, N): matrix of projected pc time series, N must be >= n_components
+    t (float): 
+  Usage:
+    pca = PCA(n_components=4)
+    projected_X = pca.fit_transform(X)
+    plot_principal_component_fft(2, projected_X, 0.01)
+  """
+  N = len(projected[:,0])
+  fig, ax = plt.subplots()
+
+  for i in range(n_components):
+    pc_fft = fft(projected[:,i]) 
+    pc_fft_freq = np.linspace(0., 1./(2. * t), N//2)
+
+    ax.plot(pc_fft_freq, 2.0/N * np.abs(pc_fft[0:N//2])) 
+
+  ax.set_xlim(0, 5)
+  ax.set_xlabel("Frequency (Hz)")
+  ax.set_ylabel("Power")
+  plt.grid() 
+  plt.show()
