@@ -27,12 +27,16 @@ model.init()
 # Also, interactome analysis is done after the first 50 timesteps.
 fwd_dynamics = v_normalized_mat[300:,:]
 
+# Plot some motor neurons.
+fig = plot_saved_dynamics(['AS01', 'DA01', 'DD01'], fwd_dynamics, neuron_metadata_collection)
+fig.savefig("results/milestone_oscillation_motorneurons.png")
+
 # Get all the motor neurons
 motor_neurons = []
 for id in range(neuron_metadata_collection.get_size()):
     if neuron_metadata_collection.get_metadata(id).neuron_type == NeuronType.MOTOR:
         motor_neurons.append(id)
-        
+ 
 # Worm atlas says 113: "A total of 113 of the 302 C. elegans neurons belong to the motor neuron category"
 # But, we get 109 motor neurons. Close enough.
 # Let's extract out just the motor neurons' time series.

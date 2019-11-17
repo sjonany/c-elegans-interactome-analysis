@@ -30,6 +30,7 @@ def plot_saved_dynamics(neuron_names_to_show, dynamics, neuron_metadata_collecti
       ax = axes[i]
     ax.plot(times, dynamic)
     ax.set_title(name)
+  return fig
 
 def plot_principal_component_fft(n_components, projected, t):
   """ Plots FFT for a projected time series of principal components
