@@ -55,5 +55,5 @@ def plot_principal_component_fft(n_components, projected, t):
   ax.set_xlim(0, 5)
   ax.set_xlabel("Frequency (Hz)")
   ax.set_ylabel("Power")
-  plt.grid() 
+  plt.grid()
   plt.show()
