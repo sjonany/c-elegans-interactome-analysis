@@ -26,8 +26,7 @@ class NeuralModel:
 
     For an end-to-end example, please see milestone_responsive.ipynb
   """
-
-  def __init__(self, neuron_metadata_collection):
+  def __init__(self, neuron_metadata_collection, C=0.015, Gc=0.1, ggap=1.0, gsyn=1.0):
     self.neuron_metadata_collection = neuron_metadata_collection
     # Number of neurons
     self.N = 279
@@ -37,20 +36,20 @@ class NeuralModel:
 
     self.I_ext = np.zeros(self.N)
 
-    # Cell membrane capacitance. 1.5 pF / 100 = 0.015 arb (arbitrary unit)
-    self.C = 0.015
+    # Cell membrane capacitance. Default: 1.5 pF / 100 = 0.015 arb (arbitrary unit)
+    self.C = C
 
-    # Cell membrane conductance, for calculating I_leak. 10pS / 100 = 0.1 arb
-    self.Gc = 0.1
+    # Cell membrane conductance, for calculating I_leak. Default: 10pS / 100 = 0.1 arb
+    self.Gc = Gc
 
     # Leakage potential (mV)
     self.Ec = -35.0
 
-    # ggap = 100pS / 100 = 1 arb
-    self.ggap = 1.0
+    # ggap Default: 100pS / 100 = 1 arb
+    self.ggap = ggap
 
-    # gsyn = 100pS / 100 = 1 arb
-    self.gsyn = 1.0
+    # gsyn Default: 100pS / 100 = 1 arb
+    self.gsyn = gsyn
 
     # Synaptic activity
     # Synaptic activity's rise time
