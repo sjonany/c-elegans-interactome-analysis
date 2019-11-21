@@ -20,15 +20,22 @@ def get_dominant_periods(projected, t):
 
     return 1./freqs
 
-def get_dominant_period(projected, t):
-    (pc_fft, pc_fft_freq) = get_fft(projected[:,0], t)
+def get_dominant_period(projected, dt = 0.01):
+	return get_period(projected[:,0], dt)
+
+"""
+Compute the oscillation period of a timeseries.
+
+Sample usage:
+pca = PCA()
+projected_X = pca.fit_transform(X)
+dominant_period = get_period(projected_X[:,0])
+"""
+def get_period(timeseries, dt = 0.01):
+	# Only compute the
+    (pc_fft, pc_fft_freq) = get_fft(timeseries, dt)
     peak = np.where(pc_fft == np.amax(pc_fft))
     freq_1 = pc_fft_freq[peak]
     per_1 = 1./freq_1[0]
 
     return per_1
-
-
-
-
-
