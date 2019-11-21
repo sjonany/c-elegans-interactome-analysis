@@ -77,3 +77,17 @@ def get_dimensionality(w):
 	w_sqr = w * w # Pointwise multiplication of w
 	w_sum_sqr = sum(w_sqr)
 	return 1.0 * w_sqr_sum / w_sum_sqr
+
+"""
+We assume the timeseries has already stabilized.
+If not, discard the the first few timesteps of your timeseries.
+Some papers like [Fletcher 2016 - From global to local...] filters for oscillation based on amplitude.
+"""
+def get_amplitude(timeseries):
+    return max(timeseries) - min(timeseries)
+
+"""
+Test the convergence of amplitude calculation by comparing full vs half-time series calculation.
+"""
+def get_amplitude_convergence(timeseries):
+    return get_amplitude(timeseries[int(len(timeseries) / 2.0):]) / get_amplitude(timeseries) 

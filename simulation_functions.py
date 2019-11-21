@@ -13,7 +13,7 @@ def simulate_until_stable(C, Gc, ggap, gsyn):
         gsyn - global synaptic conductance pS / 100 = arb
     Returns:
         fwd_dynamics (n_timesteps - 300 x n_neurons) - matrix of normalized membrane potential time series for
-            all neurons with first 300 timesteps truncated
+            all neurons with first 1000 timesteps truncated
     """
     # initialize model
     model = NeuralModel(neuron_metadata_collection, C, Gc, ggap, gsyn)
@@ -24,9 +24,9 @@ def simulate_until_stable(C, Gc, ggap, gsyn):
     model.init()
 
     # simulate
-    n_timesteps = 2000
+    n_timesteps = 3000
     (v_mat, s_mat, v_normalized_mat) = model.run(n_timesteps)
 
-    # assume stability after 300 timesteps
-    fwd_dynamics = v_normalized_mat[300:,:]
+    # assume stability after 2000 timesteps
+    fwd_dynamics = v_normalized_mat[2000:,:]
     return fwd_dynamics
