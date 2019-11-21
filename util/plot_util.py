@@ -32,6 +32,24 @@ def plot_saved_dynamics(neuron_names_to_show, dynamics, neuron_metadata_collecti
     ax.set_title(name)
   return fig
 
+def plot_saved_dynamics_collapsed(neuron_names_to_show, dynamics, neuron_metadata_collection):
+  """
+  See plot_saved_dynamics. The difference is that we just collapse all plots into 1 figure.
+  """
+  dynamics_snapshot_count = dynamics.shape[0]
+  num_neurons_to_show = len(neuron_names_to_show)
+  fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 3))
+  times = np.arange(0, dynamics_snapshot_count * 0.01 , 0.01)
+  for i in range(num_neurons_to_show):
+    name = neuron_names_to_show[i]
+    id = neuron_metadata_collection.get_id_from_name(name)
+    # The neuron ids are already 0-indexed, and is a direct index to dynamics column.
+    dynamic = dynamics[:, id]
+    ax.plot(times, dynamic, label = name)
+  ax.set_title(name)
+  ax.legend()
+  return fig
+
 def plot_principal_component_fft(n_components, projected, t):
   """ Plots FFT for a projected time series of principal components
   Args:
