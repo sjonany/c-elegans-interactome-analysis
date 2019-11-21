@@ -90,4 +90,4 @@ def get_amplitude(timeseries):
 Test the convergence of amplitude calculation by comparing full vs half-time series calculation.
 """
 def get_amplitude_convergence(timeseries):
-    return get_amplitude(timeseries[int(len(timeseries) / 2.0):]) / get_amplitude(timeseries) 
+    return get_amplitude(timeseries[int(len(timeseries) / 2.0):]) / get_amplitude(timeseries)
