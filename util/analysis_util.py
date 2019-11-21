@@ -39,3 +39,41 @@ def get_period(timeseries, dt = 0.01):
     per_1 = 1./freq_1[0]
 
     return per_1
+
+"""
+Get the eigenvalues from a fitted PCA.
+
+Sample usage:
+
+n = X.shape[0]
+pca = PCA()
+eigen_vals = get_eigenvalues_from_pca(pca, n)
+
+# You can confirm that this transformation from singular values is equivalent
+# to the eigenvalues if we had done PCA manually through covariance matrix as below.
+# See https://towardsdatascience.com/pca-and-svd-explained-with-numpy-5d13b0d2a4d8
+
+C = np.dot(X.T, X) / (n-1)
+eigen_vals, _ = np.linalg.eig(C)
+
+# You can then confirm these two definitions are equivalent.
+"""
+def get_eigenvalues_from_pca(pca, n):
+	return pca.singular_values_ ** 2.0
+
+"""
+Measure of dimensionality by litwin-kumar, et al. 2017.
+
+Sample usage:
+
+n = X.shape[0]
+pca = PCA()
+eigen_vals = get_eigenvalues_from_pca(pca, n)
+get_dimensionality(eigen_vals)
+"""
+def get_dimensionality(w):
+	w_sum = sum(w)
+	w_sqr_sum = w_sum * w_sum #calculate the squared sum of the eigen values
+	w_sqr = w * w # Pointwise multiplication of w
+	w_sum_sqr = sum(w_sqr)
+	return 1.0 * w_sqr_sum / w_sum_sqr
