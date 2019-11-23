@@ -8,9 +8,10 @@ neuron_metadata_collection = NeuronMetadataCollection.load_from_chem_json('data/
 
 def simulate_until_stable(C, Gc, ggap, gsyn,
                          min_n_timesteps = 1000,
+                         max_n_timesteps = 50000,
                          n_timesteps_to_keep = 1000,
                          max_amplitude_convergence = 0.05,
-                         max_amplitude = 0.5,
+                         max_amplitude = 0.1,
                          debug = True):
     """
     See simulate().
@@ -42,6 +43,10 @@ def simulate_until_stable(C, Gc, ggap, gsyn,
             # TODO: A better way is to place this convergence logic in neural_model.py,
             # so we don't restart the simulation.
             increment *= 2
+
+        if n_timesteps > max_n_timesteps:
+            print("n_timesteps {} is too high! We give up on convergence :(".format(n_timesteps))
+            return dynamics
 
 def simulate(C, Gc, ggap, gsyn,
                           n_timesteps,
