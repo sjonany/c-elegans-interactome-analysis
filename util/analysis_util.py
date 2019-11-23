@@ -87,7 +87,11 @@ def get_amplitude(timeseries):
     return max(timeseries) - min(timeseries)
 
 """
-Test the convergence of amplitude calculation by comparing full vs half-time series calculation.
+Test the convergence of amplitude calculation by comparing the amplitude of two half-times.
+The ideal value is 0% difference of the two amps. So, a reasonable number would be to check < 0.05
 """
 def get_amplitude_convergence(timeseries):
-    return get_amplitude(timeseries[int(len(timeseries) / 2.0):]) / get_amplitude(timeseries)
+    cutoff = int(len(timeseries) / 2.0)
+    amp1 = get_amplitude(timeseries[cutoff:])
+    amp2 = get_amplitude(timeseries[:cutoff])
+    return 1.0 * abs(amp1 - amp2) / amp1 
