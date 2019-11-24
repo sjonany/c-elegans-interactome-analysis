@@ -87,11 +87,14 @@ def get_amplitude(timeseries):
     return max(timeseries) - min(timeseries)
 
 """
-Test the convergence of amplitude calculation by comparing the amplitude of two half-times.
-The ideal value is 0% difference of the two amps. So, a reasonable number would be to check < 0.05
+Compare the amplitude of two half-times.
+A good amplitude difference is something small like 0.1, because the worm amplitudes already go up to as high as 500.
+Returns (raw value, normalized value)
 """
-def get_amplitude_convergence(timeseries):
+def get_amplitude_differences(timeseries):
     cutoff = int(len(timeseries) / 2.0)
     amp1 = get_amplitude(timeseries[cutoff:])
     amp2 = get_amplitude(timeseries[:cutoff])
-    return 1.0 * abs(amp1 - amp2) / amp1 
+    raw_diff = abs(amp1 - amp2)
+    normalized_diff = raw_diff / amp1
+    return raw_diff, normalized_diff
