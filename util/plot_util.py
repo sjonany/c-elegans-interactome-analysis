@@ -46,7 +46,6 @@ def plot_saved_dynamics_collapsed(neuron_names_to_show, dynamics, neuron_metadat
     # The neuron ids are already 0-indexed, and is a direct index to dynamics column.
     dynamic = dynamics[:, id]
     ax.plot(times, dynamic, label = name)
-  ax.set_title(name)
   ax.legend()
   return fig
 
