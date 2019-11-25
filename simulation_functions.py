@@ -1,3 +1,5 @@
+import os
+import pickle
 from neural_model import NeuralModel
 from sklearn.decomposition import PCA
 
@@ -5,6 +7,13 @@ from util.neuron_metadata import NeuronMetadataCollection
 from util.analysis_util import *
 
 neuron_metadata_collection = NeuronMetadataCollection.load_from_chem_json('data/chem.json')
+
+# Make all the param values be exactly formatted for caching.
+def adjust_param(val):
+    return float('%.3f' % val)
+
+def get_cache_file_path(C, Gc, ggap, gsyn):
+    return "cached_notebook_results/cached_simulation_C={0}_Gc={1}_ggap={2}_gsyn={3}".format(C, Gc, ggap, gsyn)
 
 def simulate_until_stable(C, Gc, ggap, gsyn,
                          min_n_timesteps = 1000,
@@ -19,8 +28,26 @@ def simulate_until_stable(C, Gc, ggap, gsyn,
     hasn't converged yet.
     See util/analysis_util.py > get_amplitude_convergence.
     """
+    
+    # Check if cached result exists
+    C = adjust_param(C)
+    Gc = adjust_param(Gc)
+    ggap = adjust_param(ggap)
+    gsyn = adjust_param(gsyn)
+    
+    cache_file = get_cache_file_path(C, Gc, ggap, gsyn)
+    
+    if os.path.isfile(cache_file):
+      print("Loading saved results from pickle file {}".format(cache_file))
+      with open(cache_file, "rb") as f:
+        return pickle.load(f)
+
+    # If cached result doesn't exist, compute
     n_timesteps = min_n_timesteps
     increment = n_timesteps_convergence_check
+    
+    all_dynamics = None
+    
     while(True):
         all_dynamics = simulate(C, Gc, ggap, gsyn, n_timesteps)
         last_dynamics = all_dynamics[n_timesteps - n_timesteps_convergence_check:,:]
@@ -40,7 +67,7 @@ def simulate_until_stable(C, Gc, ggap, gsyn,
         # Normalized diff needed to catch limit cycles with large amplitudes, but model has roundoff errors.
         if (amplitude_diff_raw < max_amplitude_raw_diff
             or amplitude_diff_scaled < max_amplitude_scaled_diff):
-            return all_dynamics
+            break
         else:
             n_timesteps += increment
             # Binary search for smallest simulation length to reach convergence
@@ -50,7 +77,13 @@ def simulate_until_stable(C, Gc, ggap, gsyn,
 
         if n_timesteps > max_n_timesteps:
             print("n_timesteps {} is too high! We give up on convergence :(".format(n_timesteps))
-            return all_dynamics
+            break
+            
+    # Update cache
+    with open(cache_file, "wb") as f:
+        pickle.dump(all_dynamics, f)
+    
+    return all_dynamics
 
 def simulate(C, Gc, ggap, gsyn,
                           n_timesteps):

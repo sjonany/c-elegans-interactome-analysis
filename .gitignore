@@ -1,3 +1,6 @@
+# Total cached simulation results for 400 params cost 2.9G
+cached_notebook_results/cached_simulation_*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
