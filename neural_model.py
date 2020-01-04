@@ -2,12 +2,13 @@ import numpy as np
 from scipy import integrate, linalg, sparse
 import pdb
 from util.neuron_metadata import *
+from util.data_accessor import *
 
 class NeuralModel:
   """ The C elegans model as described in the paper: "Neural Interactome: Interactive Simulation of a Neuronal System"
   Main reference: https://github.com/shlizee/C-elegans-Neural-Interactome/blob/master/initialize.py
   Usage:
-    neuron_metadata_collection = NeuronMetadataCollection.load_from_chem_json('data/chem.json')
+    neuron_metadata_collection = NeuronMetadataCollection.load_from_chem_json(get_data_file_abs_path('chem.json'))
     model = NeuralModel(neuron_metadata_collection)
 
     # You can tweak parameters before running
@@ -67,16 +68,16 @@ class NeuralModel:
   def init(self):
     # Gap junctions. Total conductivity of gap junctions, where total conductivity = #junctions * ggap.
     # An N x N matrix were Gg[i][j] = from neuron j to i.
-    self.Gg = np.load('data/Gg.npy') * self.ggap
+    self.Gg = np.load(get_data_file_abs_path('Gg.npy')) * self.ggap
 
     # Synaptic junctions. Total conductivity of synapses, where total conductivity = #junctions * gsyn.
     # An N x N matrix were Gs[i][j] = from neuron j to i.
-    self.Gs = np.load('data/Gs.npy') * self.gsyn
+    self.Gs = np.load(get_data_file_abs_path('Gs.npy')) * self.gsyn
 
     # E. Reversal potential for each neuron, for calculating I_syn
     # 0 mV for synapses going from an excitatory neuron, -48 mV for inhibitory.
     # N-element array that is 1.0 if inhibitory.
-    is_inhibitory = np.load('data/emask.npy')
+    is_inhibitory = np.load(get_data_file_abs_path('emask.npy'))
     self.E = np.reshape(-48.0 * is_inhibitory, self.N)
 
     if self.seed is not None:
